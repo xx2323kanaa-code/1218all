@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hand Overlay – Pen & Phone Hold Edition</title>
+<title>Hand Overlay – Perfect Edition</title>
 
 <style>
   html, body {
@@ -16,6 +16,7 @@
     font-family: system-ui, sans-serif;
   }
 
+  /* ===== Hand Area ===== */
   #handArea {
     position: fixed;
     top: 20px;
@@ -35,16 +36,37 @@
     display: none;
   }
 
+  /* ===== Effect Overlay (LOCK / MINI OPEN) ===== */
+  #effectOverlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: none;
+  }
+
+  #effectOverlay.lock {
+    display: block;
+    background: rgba(255, 255, 0, 0.45); /* 蛍光黄色 */
+    mix-blend-mode: screen;
+  }
+
+  #effectOverlay.mini {
+    display: block;
+    background: rgba(120, 200, 255, 0.35); /* 薄青 */
+    mix-blend-mode: screen;
+  }
+
+  /* ===== Buttons ===== */
   .btns {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 12px;
-    z-index: 2000;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
+    z-index: 2000;
   }
 
   button {
@@ -61,6 +83,7 @@
     color: #000;
   }
 
+  /* ===== HUD ===== */
   #hud {
     position: fixed;
     top: 10px;
@@ -84,10 +107,11 @@
   <img id="openHand"   src="hand_open.png">
   <img id="holdHand"   src="hand_hold.png">
   <img id="penHand"    src="hand_pen.png">
-
-  <!-- 追加 -->
   <img id="keyHand"    src="hand_keypinch.png">
   <img id="saluteHand" src="hand_salute.png">
+
+  <!-- Effect Layer -->
+  <div id="effectOverlay"></div>
 </div>
 
 <!-- ===== Controls ===== -->
@@ -95,10 +119,11 @@
   <button id="btnRelax">RELAX</button>
   <button id="btnHold">HOLD</button>
   <button id="btnPen">PEN</button>
-
-  <!-- 追加 -->
   <button id="btnKey">KEY</button>
   <button id="btnSalute">SALUTE</button>
+
+  <button id="btnLock">LOCK</button>
+  <button id="btnMini">MINI</button>
 
   <button id="btnHUD">HUD</button>
 </div>
@@ -106,27 +131,34 @@
 <div id="hud"></div>
 
 <script>
+  /* ===== Elements ===== */
   const openHand   = document.getElementById("openHand");
   const holdHand   = document.getElementById("holdHand");
   const penHand    = document.getElementById("penHand");
   const keyHand    = document.getElementById("keyHand");
   const saluteHand = document.getElementById("saluteHand");
 
+  const effectOverlay = document.getElementById("effectOverlay");
+
   const btnRelax  = document.getElementById("btnRelax");
   const btnHold   = document.getElementById("btnHold");
   const btnPen    = document.getElementById("btnPen");
   const btnKey    = document.getElementById("btnKey");
   const btnSalute = document.getElementById("btnSalute");
+  const btnLock   = document.getElementById("btnLock");
+  const btnMini   = document.getElementById("btnMini");
   const btnHUD    = document.getElementById("btnHUD");
 
   const hud = document.getElementById("hud");
 
   let state = "";
+  let effect = "NONE";
   let hudVisible = false;
 
   function updateHUD(extra="") {
     hud.textContent =
       `STATE: ${state}\n` +
+      `EFFECT: ${effect}\n` +
       `open   loaded: ${openHand.complete}\n` +
       `hold   loaded: ${holdHand.complete}\n` +
       `pen    loaded: ${penHand.complete}\n` +
@@ -136,7 +168,7 @@
       extra;
   }
 
-  function hideAll() {
+  function hideAllHands() {
     openHand.style.display   = "none";
     holdHand.style.display   = "none";
     penHand.style.display    = "none";
@@ -152,7 +184,7 @@
 
   function setState(next) {
     state = next;
-    hideAll();
+    hideAllHands();
 
     if (state === "RELAX") {
       openHand.style.display = "block";
@@ -187,11 +219,33 @@
     updateHUD("→ " + state);
   }
 
+  function setEffect(mode) {
+    effect = mode || "NONE";
+    effectOverlay.className = "";
+    effectOverlay.style.display = "none";
+
+    if (effect === "LOCK") {
+      effectOverlay.classList.add("lock");
+      effectOverlay.style.display = "block";
+    }
+
+    if (effect === "MINI") {
+      effectOverlay.classList.add("mini");
+      effectOverlay.style.display = "block";
+    }
+
+    updateHUD("→ EFFECT " + effect);
+  }
+
+  /* ===== Events ===== */
   btnRelax.onclick  = () => setState("RELAX");
   btnHold.onclick   = () => setState("HOLD");
   btnPen.onclick    = () => setState("PEN");
   btnKey.onclick    = () => setState("KEY");
   btnSalute.onclick = () => setState("SALUTE");
+
+  btnLock.onclick = () => setEffect("LOCK");
+  btnMini.onclick = () => setEffect("MINI");
 
   btnHUD.onclick = () => {
     hudVisible = !hudVisible;
@@ -199,7 +253,9 @@
     updateHUD("HUD toggled");
   };
 
+  /* ===== Init ===== */
   setState("RELAX");
+  setEffect(null);
 </script>
 
 </body>
